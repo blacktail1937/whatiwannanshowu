@@ -14,6 +14,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.*;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -23,6 +24,8 @@ import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import org.slf4j.Logger;
+
+import java.util.Optional;
 
 
 @EventBusSubscriber(modid = WhatIwannashowU.MODID, value = Dist.CLIENT)
@@ -39,14 +42,21 @@ public class ClientEvents {
     @SubscribeEvent
     static void onScreenKey(ScreenEvent.KeyReleased.Pre event) {
         var mc = Minecraft.getInstance();
-        if (mc.screen instanceof AbstractContainerScreen<?> gui) {
-            if (SHARED_KEY.isActiveAndMatches(InputConstants.getKey(event.getKeyCode(), event.getScanCode()))) {
-                var slot = gui.getSlotUnderMouse();
-                if (slot != null) {
-                    var stack = slot.getItem();
-                    if (!stack.isEmpty())
-                        sendSharePacket(mc, stack);
-                }
+        if (mc.screen == null) return;
+
+        if (SHARED_KEY.isActiveAndMatches(InputConstants.getKey(event.getKeyCode(), event.getScanCode()))) {
+            var stack = Optional.of(mc.screen)
+                    .filter(AbstractContainerScreen.class::isInstance)
+                    .map(AbstractContainerScreen.class::cast)
+                    .map(AbstractContainerScreen::getSlotUnderMouse)
+                    .map(Slot::getItem)
+                    .or(() -> Optional.ofNullable(Config.IS_JEI_LOADED ? JeiPlugin.getStackUnderMouse() : null))
+                    .filter(s -> !s.isEmpty())
+                    .orElse(ItemStack.EMPTY);
+
+            if (!stack.isEmpty()) {
+                sendSharePacket(mc, stack);
+                event.setCanceled(true);
             }
         }
     }

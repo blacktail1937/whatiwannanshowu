@@ -9,6 +9,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 
+import java.util.Optional;
+
 @mezz.jei.api.JeiPlugin
 public class JeiPlugin implements IModPlugin {
     private static IJeiRuntime JEI_RUNTIME;
@@ -32,5 +34,15 @@ public class JeiPlugin implements IModPlugin {
                     RecipeIngredientRole.OUTPUT, VanillaTypes.ITEM_STACK, stack
             ));
         }
+    }
+
+    public static ItemStack getStackUnderMouse() {
+        if (JEI_RUNTIME != null) {
+            return JEI_RUNTIME.getRecipesGui().getIngredientUnderMouse(VanillaTypes.ITEM_STACK)
+                    .or(() -> Optional.ofNullable(JEI_RUNTIME.getIngredientListOverlay().getIngredientUnderMouse(VanillaTypes.ITEM_STACK)))
+                    .orElse(ItemStack.EMPTY);
+        }
+
+        return ItemStack.EMPTY;
     }
 }
