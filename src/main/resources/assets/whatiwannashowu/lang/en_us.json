@@ -2,12 +2,13 @@
   "itemGroup.whatiwannashowu": "Example Mod Tab",
   "block.whatiwannashowu.example_block": "Example Block",
   "item.whatiwannashowu.example_item": "Example Item",
-
   "whatiwannashowu.configuration.title": "What I wanna show U Configs",
   "whatiwannashowu.configuration.section.whatiwannashowu.common.toml": "What I wanna show U Configs",
   "whatiwannashowu.configuration.section.whatiwannashowu.common.toml.title": "What I wanna show U Configs",
   "whatiwannashowu.configuration.items": "Item List",
   "whatiwannashowu.configuration.logDirtBlock": "Log Dirt Block",
   "whatiwannashowu.configuration.magicNumberIntroduction": "Magic Number Text",
-  "whatiwannashowu.configuration.magicNumber": "Magic Number"
+  "whatiwannashowu.configuration.magicNumber": "Magic Number",
+  "key.whatiwannashowu.share_item": "Share Item to Chat",
+  "key.categories.whatiwannashowu": "whatiwannashowu"
 }

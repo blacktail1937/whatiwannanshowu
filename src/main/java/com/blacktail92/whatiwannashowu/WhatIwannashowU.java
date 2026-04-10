@@ -1,5 +1,10 @@
 package com.blacktail92.whatiwannashowu;
 
+import com.blacktail92.whatiwannashowu.networking.ClientPacketHandler;
+import com.blacktail92.whatiwannashowu.networking.ShareItemPayload;
+import net.minecraft.network.protocol.PacketFlow;
+import net.neoforged.neoforge.common.conditions.ICondition;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -68,6 +73,7 @@ public class WhatIwannashowU {
     public WhatIwannashowU(IEventBus modEventBus, ModContainer modContainer) {
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
+        modEventBus.addListener(this::registerNetworking);
 
         // Register the Deferred Register to the mod event bus so blocks get registered
         BLOCKS.register(modEventBus);
@@ -113,5 +119,26 @@ public class WhatIwannashowU {
     public void onServerStarting(ServerStartingEvent event) {
         // Do something when the server starts
         LOGGER.info("HELLO from server starting");
+    }
+
+    private void registerNetworking(RegisterPayloadHandlersEvent event) {
+        final var register = event.registrar("1.0.0");
+
+        register.playBidirectional(
+                ShareItemPayload.TYPE,
+                ShareItemPayload.STEAM_CODEC,
+                (payload, context) -> context.enqueueWork(() -> {
+                    if (context.flow() == PacketFlow.SERVERBOUND) {
+                        var server = context.player().getServer();
+                        if (server != null) {
+                            var relay = new ShareItemPayload(context.player().getUUID(), payload.stack());
+                            for (var p : server.getPlayerList().getPlayers())
+                                p.connection.send(relay);
+                        }
+                    } else {
+                        ClientPacketHandler.handleShareItem(payload);
+                    }
+                })
+        );
     }
 }
