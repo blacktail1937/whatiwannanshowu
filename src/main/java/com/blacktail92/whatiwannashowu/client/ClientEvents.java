@@ -111,12 +111,13 @@ public class ClientEvents {
 
     @SubscribeEvent
     static void onRegisterClientCommands(RegisterClientCommandsEvent event) {
+        var key = "itemId";
         event.getDispatcher().register(
                 Commands.literal("wiwsu_lookup")
-                        .then(Commands.argument("itemId", ResourceLocationArgument.id())
+                        .then(Commands.argument(key, ResourceLocationArgument.id())
                                 .executes(context -> {
                                     if (Config.IS_JEI_LOADED) {
-                                        var itemId = ResourceLocationArgument.getId(context, "itemId");
+                                        var itemId = ResourceLocationArgument.getId(context, key);
                                         var item = BuiltInRegistries.ITEM.get(itemId);
 
                                         Minecraft.getInstance().execute(() -> JeiPlugin.showRecipe(new ItemStack(item)));
