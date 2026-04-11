@@ -11,15 +11,25 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.synchronization.SuggestionProviders;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.slf4j.Logger;
 
 import java.util.Optional;
@@ -65,6 +75,12 @@ public class ClientKeyEvents {
         }
     }
 
+    static void sendSharePacket(Minecraft mc, ItemStack stack) {
+        if (mc.player != null && mc.getConnection() != null) {
+            ModMessages.sendToServer(new ShareItemPayload(mc.player.getUUID(), stack));
+        }
+    }
+
     public static Component createItemLink(ItemStack stack) {
         var itemName = stack.getHoverName();
 
@@ -79,15 +95,48 @@ public class ClientKeyEvents {
                 .withStyle(style -> {
                     var updateStyle = stack.getRarity().getStyleModifier().apply(style);
 
+//                    if (Config.IS_JEI_LOADED) {
+//                        var itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
+//
+//                        var cmd = "/wiwsu_lookup " + itemId;
+//                        LOGGER.info("点击指令是 {}", cmd);
+//                        updateStyle = updateStyle.withClickEvent(
+//                                new ClickEvent(ClickEvent.Action.RUN_COMMAND, cmd)
+//                        );
+//                    }
+
                     return updateStyle
                             .withUnderlined(true)
                             .withHoverEvent(itemHover);
                 });
     }
 
-    static void sendSharePacket(Minecraft mc, ItemStack stack) {
-        if (mc.player != null && mc.getConnection() != null) {
-            ModMessages.sendToServer(new ShareItemPayload(mc.player.getUUID(), stack));
-        }
-    }
+//    @SubscribeEvent
+//    static void onRegisterCommands(RegisterClientCommandsEvent event) {
+//        var key = "itemId";
+//        event.getDispatcher().register(
+//                Commands.literal("wiwsu_lookup")
+//                        .then(Commands.argument(key, ResourceLocationArgument.id())
+//                                .suggests(((context, builder) -> SharedSuggestionProvider.suggestResource(
+//                                        ForgeRegistries.ITEMS.getKeys(), builder
+//                                )))
+//                                .executes(context -> {
+//                                    if (Config.IS_JEI_LOADED) {
+//                                        var itemId = ResourceLocationArgument.getId(context, key);
+//                                        var item = ForgeRegistries.ITEMS.getValue(itemId);
+//
+//                                        Minecraft.getInstance().execute(
+//                                                () -> {
+//                                                    if (item != null) {
+//                                                        JeiPlugin.showRecipe(new ItemStack(item));
+//                                                    }
+//                                                }
+//                                        );
+//                                    }
+//
+//                                    return 1;
+//                                }))
+//
+//        );
+//    }
 }

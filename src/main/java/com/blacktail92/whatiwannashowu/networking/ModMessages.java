@@ -18,7 +18,7 @@ public class ModMessages {
 
     public static void register() {
         CHANNEL = NetworkRegistry.ChannelBuilder
-                .named(ResourceLocation.tryParse(WhatIWannaShowU.MODID + ":messages"))
+                .named(ResourceLocation.fromNamespaceAndPath(WhatIWannaShowU.MODID, "messages"))
                 .networkProtocolVersion(() -> "1.0")
                 .clientAcceptedVersions(s -> true)
                 .serverAcceptedVersions(s -> true)
