@@ -17,7 +17,7 @@ public class ModClientEvents {
     @SubscribeEvent
     static void onKeyRegister(RegisterKeyMappingsEvent event) {
         LOGGER.info("register short key");
-        ClientKeyEvents.SHARED_KEY = new KeyMapping("key.whatiwannashowu.share_item", InputConstants.KEY_G, "key.categories.whatiwannashowu");
-        event.register(ClientKeyEvents.SHARED_KEY);
+        ClientEvents.SHARED_KEY = new KeyMapping("key.whatiwannashowu.share_item", InputConstants.KEY_G, "key.categories.whatiwannashowu");
+        event.register(ClientEvents.SHARED_KEY);
     }
 }

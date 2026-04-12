@@ -1,10 +1,9 @@
 package com.blacktail92.whatiwannashowu.networking;
 
-import com.blacktail92.whatiwannashowu.client.ClientKeyEvents;
+import com.blacktail92.whatiwannashowu.client.ClientEvents;
 import net.minecraft.client.GuiMessageTag;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.client.ForgeHooksClient;
 
 public class ClientPacketHandler {
     public static void handleShareItem(ShareItemPayload payload) {
@@ -14,7 +13,7 @@ public class ClientPacketHandler {
         var player = mc.level.getPlayerByUUID(payload.senderUUID());
         var senderName = (player != null) ? player.getName().getString() : "Player";
 
-        var link = ClientKeyEvents.createItemLink(payload.stack());
+        var link = ClientEvents.createItemLink(payload.stack());
         var message = Component.literal("<")
                 .append(Component.literal(senderName))
                 .append(Component.literal("> "))

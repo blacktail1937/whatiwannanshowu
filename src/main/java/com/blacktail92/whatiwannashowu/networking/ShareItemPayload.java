@@ -7,26 +7,11 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-public class ShareItemPayload {
-    private final UUID senderUUID;
-    private final ItemStack stack;
+public record ShareItemPayload(UUID senderUUID, ItemStack stack) {
 
-    public ShareItemPayload(UUID senderUUID, ItemStack stack) {
-        this.senderUUID = senderUUID;
-        this.stack = stack;
-    }
-
-    public UUID senderUUID() {
-        return senderUUID;
-    }
-
-    public ItemStack stack() {
-        return stack;
-    }
-
-    public static void encode(ShareItemPayload paylod, FriendlyByteBuf buf) {
-        buf.writeUUID(paylod.senderUUID);
-        buf.writeItem(paylod.stack);
+    public static void encode(ShareItemPayload payload, FriendlyByteBuf buf) {
+        buf.writeUUID(payload.senderUUID);
+        buf.writeItem(payload.stack);
     }
 
     public static ShareItemPayload decode(FriendlyByteBuf buf) {

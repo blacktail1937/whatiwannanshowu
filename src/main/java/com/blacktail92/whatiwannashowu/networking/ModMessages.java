@@ -1,5 +1,6 @@
 package com.blacktail92.whatiwannashowu.networking;
 
+import com.blacktail92.whatiwannashowu.Config;
 import com.blacktail92.whatiwannashowu.WhatIWannaShowU;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -28,6 +29,12 @@ public class ModMessages {
                 .decoder(ShareItemPayload::decode)
                 .encoder(ShareItemPayload::encode)
                 .consumerMainThread(ShareItemPayload::handle)
+                .add();
+
+        CHANNEL.messageBuilder(OpenJeiPayload.class, id())
+                .decoder(OpenJeiPayload::decode)
+                .encoder(OpenJeiPayload::encode)
+                .consumerMainThread(OpenJeiPayload::handle)
                 .add();
     }
 
