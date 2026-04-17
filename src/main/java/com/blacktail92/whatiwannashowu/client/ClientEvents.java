@@ -11,6 +11,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.*;
@@ -95,17 +96,16 @@ public class ClientEvents {
                 .append(itemName)
                 .append("]")
                 .withStyle(style -> {
-                    var updateStyle = style
-                            .withColor(ChatFormatting.AQUA)
-                            .withUnderlined(true)
-                            .withHoverEvent(itemHover);
+                    var updateStyle = stack.getRarity().getStyleModifier().apply(style);
 
                     if (Config.IS_JEI_LOADED) {
                         var itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
                         updateStyle = updateStyle.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/wiwsu_lookup " + itemId));
                     }
 
-                    return updateStyle;
+                    return updateStyle
+                            .withUnderlined(true)
+                            .withHoverEvent(itemHover);
                 });
     }
 
@@ -115,6 +115,9 @@ public class ClientEvents {
         event.getDispatcher().register(
                 Commands.literal("wiwsu_lookup")
                         .then(Commands.argument(key, ResourceLocationArgument.id())
+                                .suggests(((context, builder) -> SharedSuggestionProvider.suggestResource(
+                                        BuiltInRegistries.ITEM.keySet(), builder
+                                )))
                                 .executes(context -> {
                                     if (Config.IS_JEI_LOADED) {
                                         var itemId = ResourceLocationArgument.getId(context, key);
