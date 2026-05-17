@@ -7,25 +7,15 @@ import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import java.util.Optional;
 
 @mezz.jei.api.JeiPlugin
 public class JeiPlugin implements IModPlugin {
-    private static IJeiRuntime JEI_RUNTIME;
     static final Logger LOGGER = LogUtils.getLogger();
-
-    @Override
-    public ResourceLocation getPluginUid() {
-        return ResourceLocation.fromNamespaceAndPath("whatiwannashowu", "jei_plugin");
-    }
-
-    @Override
-    public void onRuntimeAvailable(IJeiRuntime runtime) {
-        LOGGER.info("get jei runtime");
-        JEI_RUNTIME = runtime;
-    }
+    private static IJeiRuntime JEI_RUNTIME;
 
     public static void showRecipe(ItemStack stack) {
         if (JEI_RUNTIME != null && !stack.isEmpty()) {
@@ -44,5 +34,16 @@ public class JeiPlugin implements IModPlugin {
         }
 
         return ItemStack.EMPTY;
+    }
+
+    @Override
+    public @NotNull ResourceLocation getPluginUid() {
+        return ResourceLocation.fromNamespaceAndPath("whatiwannashowu", "jei_plugin");
+    }
+
+    @Override
+    public void onRuntimeAvailable(@NotNull IJeiRuntime runtime) {
+        LOGGER.info("get jei runtime");
+        JEI_RUNTIME = runtime;
     }
 }

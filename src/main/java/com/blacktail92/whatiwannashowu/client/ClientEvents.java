@@ -5,8 +5,8 @@ import com.blacktail92.whatiwannashowu.WhatIwannashowU;
 import com.blacktail92.whatiwannashowu.integration.JeiPlugin;
 import com.blacktail92.whatiwannashowu.networking.ShareItemPayload;
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.logging.LogUtils;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -14,6 +14,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.*;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -26,13 +27,14 @@ import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import org.slf4j.Logger;
 
+import java.io.IOException;
 import java.util.Optional;
 
 
 @EventBusSubscriber(modid = WhatIwannashowU.MODID, value = Dist.CLIENT)
 public class ClientEvents {
-    static KeyMapping SHARED_KEY;
     static final Logger LOGGER = LogUtils.getLogger();
+    static KeyMapping SHARED_KEY;
 
     @SubscribeEvent
     static void onKeyRegister(RegisterKeyMappingsEvent event) {
@@ -69,8 +71,11 @@ public class ClientEvents {
             while (SHARED_KEY.consumeClick()) {
                 if (mc.player != null) {
                     var stack = mc.player.getMainHandItem();
-                    if (!stack.isEmpty())
+                    if (!stack.isEmpty()) {
+                        var nbt = stack.save(mc.player.registryAccess());
+                        LOGGER.info("nbt:{}", nbt);
                         sendSharePacket(mc, stack);
+                    }
                 }
             }
         }
@@ -78,9 +83,16 @@ public class ClientEvents {
 
     static void sendSharePacket(Minecraft mc, ItemStack stack) {
         if (mc.player != null && mc.getConnection() != null) {
-            mc.getConnection().send(
-                    new ShareItemPayload(mc.player.getUUID(), stack)
-            );
+            try {
+                //compress
+                var nbt = (CompoundTag) stack.save(mc.player.registryAccess());
+                LOGGER.info("nbt:{}", nbt);
+                mc.getConnection().send(
+                        new ShareItemPayload(mc.player.getUUID(), ItemCache.compress(nbt))
+                );
+            } catch (IOException e) {
+                LOGGER.error("Error while sending share packet", e);
+            }
         }
     }
 
@@ -99,8 +111,13 @@ public class ClientEvents {
                     var updateStyle = stack.getRarity().getStyleModifier().apply(style);
 
                     if (Config.IS_JEI_LOADED) {
-                        var itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
-                        updateStyle = updateStyle.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/wiwsu_lookup " + itemId));
+                        var mc = Minecraft.getInstance();
+                        if (mc.player != null) {
+                            var hash = ItemCache.put(stack, mc.player.registryAccess());
+                            var cmd = "/wiwsu_lookup " + hash;
+//                            var itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+                            updateStyle = updateStyle.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, cmd));
+                        }
                     }
 
                     return updateStyle
@@ -111,19 +128,22 @@ public class ClientEvents {
 
     @SubscribeEvent
     static void onRegisterClientCommands(RegisterClientCommandsEvent event) {
-        var key = "itemId";
+        var key = "hash";
         event.getDispatcher().register(
                 Commands.literal("wiwsu_lookup")
-                        .then(Commands.argument(key, ResourceLocationArgument.id())
+                        .then(Commands.argument(key, StringArgumentType.word())
                                 .suggests(((context, builder) -> SharedSuggestionProvider.suggestResource(
                                         BuiltInRegistries.ITEM.keySet(), builder
                                 )))
                                 .executes(context -> {
                                     if (Config.IS_JEI_LOADED) {
-                                        var itemId = ResourceLocationArgument.getId(context, key);
-                                        var item = BuiltInRegistries.ITEM.get(itemId);
-
-                                        Minecraft.getInstance().execute(() -> JeiPlugin.showRecipe(new ItemStack(item)));
+//                                        var itemId = ResourceLocationArgument.getId(context, key);
+//                                        var item = BuiltInRegistries.ITEM.get(itemId);
+                                        var hash = StringArgumentType.getString(context, key);
+                                        var mc = Minecraft.getInstance();
+                                        Optional.ofNullable(mc.player)
+                                                .ifPresent(player ->
+                                                        mc.execute(() -> JeiPlugin.showRecipe(ItemCache.get(hash, mc.player.registryAccess()))));
                                     }
 
                                     return 1;
