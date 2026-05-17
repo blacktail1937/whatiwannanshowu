@@ -16,6 +16,7 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -23,12 +24,13 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.slf4j.Logger;
 
+import java.io.IOException;
 import java.util.Optional;
 
 @Mod.EventBusSubscriber(modid = WhatIWannaShowU.MODID, value = Dist.CLIENT)
 public class ClientEvents {
-    public static KeyMapping SHARED_KEY;
     private static final Logger LOGGER = LogUtils.getLogger();
+    public static KeyMapping SHARED_KEY;
 
     @SubscribeEvent
     static void onScreenKey(ScreenEvent.KeyReleased.Pre event) {
@@ -66,9 +68,20 @@ public class ClientEvents {
         }
     }
 
+    @SubscribeEvent
+    static void onCliengLogout(ClientPlayerNetworkEvent.LoggingOut event) {
+        ItemCache.clear();
+    }
+
     static void sendSharePacket(Minecraft mc, ItemStack stack) {
         if (mc.player != null && mc.getConnection() != null) {
-            ModMessages.sendToServer(new ShareItemPayload(mc.player.getUUID(), stack));
+            try {
+                var nbt = stack.serializeNBT();
+
+                ModMessages.sendToServer(new ShareItemPayload(mc.player.getUUID(), ItemCache.compress(nbt)));
+            } catch (IOException e) {
+                LOGGER.error("Failed to send share packet", e);
+            }
         }
     }
 
@@ -87,13 +100,15 @@ public class ClientEvents {
                     var updateStyle = stack.getRarity().getStyleModifier().apply(style);
 
                     if (Config.IS_JEI_LOADED) {
-                        var itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
-
-                        var cmd = "/wiwsu_lookup " + itemId;
-//                        LOGGER.info("点击指令是 {}", cmd);
-                        updateStyle = updateStyle.withClickEvent(
-                                new ClickEvent(ClickEvent.Action.RUN_COMMAND, cmd)
-                        );
+                        var hash = ItemCache.put(stack);
+                        if (!hash.isEmpty()) {
+                            var cmd = "/wiwsu_lookup " + hash;
+                            // LOGGER.info("点击指令是 {}", cmd);
+                            // var itemId = ForgeRegistries.ITEMS.getKey(stack.getItem());
+                            updateStyle = updateStyle.withClickEvent(
+                                    new ClickEvent(ClickEvent.Action.RUN_COMMAND, cmd)
+                            );
+                        }
                     }
 
                     return updateStyle
