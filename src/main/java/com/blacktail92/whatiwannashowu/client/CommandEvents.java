@@ -1,5 +1,6 @@
 package com.blacktail92.whatiwannashowu.client;
 
+import com.blacktail92.whatiwannashowu.Config;
 import com.blacktail92.whatiwannashowu.WhatIWannaShowU;
 import com.blacktail92.whatiwannashowu.networking.ModMessages;
 import com.blacktail92.whatiwannashowu.networking.OpenJeiPayload;
@@ -19,6 +20,8 @@ public class CommandEvents {
 
     @SubscribeEvent
     static void onRegisterCommands(RegisterCommandsEvent event) {
+        if (!Config.IS_JEI_LOADED) return;
+
         LOGGER.info("register open jei gui command");
         var key = "hash";
         event.getDispatcher().register(

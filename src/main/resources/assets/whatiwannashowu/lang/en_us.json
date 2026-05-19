@@ -1,4 +1,5 @@
 {
   "key.whatiwannashowu.share_item": "Share Item to Chat",
-  "key.categories.whatiwannashowu": "What I wanna show U"
+  "key.categories.whatiwannashowu": "What I wanna show U",
+  "message.whatiwannashowu.share_cooldown": "Share cooldown: %s second(s) remaining"
 }

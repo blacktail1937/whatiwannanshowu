@@ -21,7 +21,6 @@ import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -31,6 +30,7 @@ import java.util.Optional;
 public class ClientEvents {
     private static final Logger LOGGER = LogUtils.getLogger();
     public static KeyMapping SHARED_KEY;
+    private static long LAST_SHARE_TIME;
 
     @SubscribeEvent
     static void onScreenKey(ScreenEvent.KeyReleased.Pre event) {
@@ -74,10 +74,21 @@ public class ClientEvents {
     }
 
     static void sendSharePacket(Minecraft mc, ItemStack stack) {
-        if (mc.player != null && mc.getConnection() != null) {
+        if (mc.player == null) return;
+
+        var now = System.currentTimeMillis();
+        var cooldown = Config.SHARE_COOLDOWN.get();
+        if (cooldown > 0 && now - LAST_SHARE_TIME < cooldown) {
+            var remaining = (int) Math.ceil((LAST_SHARE_TIME + cooldown - now) / 1000.0);
+            mc.player.displayClientMessage(
+                    Component.translatable("message.whatiwannashowu.share_cooldown", remaining), true);
+            return;
+        }
+        LAST_SHARE_TIME = now;
+
+        if (mc.getConnection() != null) {
             try {
                 var nbt = stack.serializeNBT();
-
                 ModMessages.sendToServer(new ShareItemPayload(mc.player.getUUID(), ItemCache.compress(nbt)));
             } catch (IOException e) {
                 LOGGER.error("Failed to send share packet", e);

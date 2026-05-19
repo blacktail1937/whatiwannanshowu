@@ -1,5 +1,6 @@
 package com.blacktail92.whatiwannashowu.client;
 
+import com.blacktail92.whatiwannashowu.Config;
 import com.mojang.logging.LogUtils;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class ItemCache {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -71,11 +73,16 @@ public class ItemCache {
         var stream = new ByteArrayOutputStream();
         NbtIo.writeCompressed(tag, stream);
 
-        // limit 128K
-        if (stream.size() > 128 * 1024) {
-            tag.remove("tag");
+        var maxSize = Config.MAX_COMPRESSED_SIZE.get() * 1024;
+        if (stream.size() > maxSize) {
+//            tag.remove("tag");
+            // Custom key possible, so fall back to the original two.
+            var cleanTag = new CompoundTag();
+            cleanTag.put("id", Objects.requireNonNull(tag.get("id")));
+            cleanTag.put("Count", Objects.requireNonNull(tag.get("Count")));
+
             stream = new ByteArrayOutputStream();
-            NbtIo.writeCompressed(tag, stream);
+            NbtIo.writeCompressed(cleanTag, stream);
         }
 
         return stream.toByteArray();

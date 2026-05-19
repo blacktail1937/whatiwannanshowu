@@ -16,10 +16,10 @@ public class ClientPacketHandler {
 
     public static void handleShareItem(ShareItemPayload payload) {
         var mc = Minecraft.getInstance();
-        if (mc.level == null) return;
+        if (mc.getConnection() == null) return;
 
-        var player = mc.level.getPlayerByUUID(payload.senderUUID());
-        var senderName = (player != null) ? player.getName().getString() : "Player";
+        var player = mc.getConnection().getPlayerInfo(payload.senderUUID());
+        var senderName = (player != null) ? player.getProfile().getName() : "Player";
 
         try {
             var nbt = ItemCache.decompress(payload.nbt());
@@ -31,7 +31,6 @@ public class ClientPacketHandler {
                     .append(link);
 
             mc.gui.getChat().addMessage(message, null, GuiMessageTag.system());
-
         } catch (IOException e) {
             LOGGER.error("Error while trying to handle share item link to client", e);
         }
