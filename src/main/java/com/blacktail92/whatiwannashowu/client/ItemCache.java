@@ -7,6 +7,7 @@ import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.world.item.ItemStack;
 import org.apache.commons.codec.digest.DigestUtils;
+import com.blacktail92.whatiwannashowu.Config;
 import org.slf4j.Logger;
 
 import java.io.ByteArrayInputStream;
@@ -35,11 +36,11 @@ public class ItemCache {
 
         try {
             var nbt = (CompoundTag) stack.save(provider);
-            LOGGER.info("before:{}, {}", nbt.size(), nbt.sizeInBytes());
+//            LOGGER.info("before:{}, {}", nbt.size(), nbt.sizeInBytes());
             var bytes = compress(nbt);
-            LOGGER.info("after:{}", bytes.length);
+//            LOGGER.info("after:{}", bytes.length);
 
-            var hash = DigestUtils.sha1Hex(bytes).substring(0, 8);
+            var hash = DigestUtils.sha1Hex(bytes);//.substring(0, 8);
 
             CACHE.put(hash, bytes);
 
@@ -74,8 +75,7 @@ public class ItemCache {
         var stream = new ByteArrayOutputStream();
         NbtIo.writeCompressed(tag, stream);
 
-        // limit 128K
-        if (stream.size() > 128 * 1024) {
+        if (stream.size() > Config.MAX_COMPRESSED_SIZE.get() * 1024) {
             tag.remove("components");
             stream = new ByteArrayOutputStream();
             NbtIo.writeCompressed(tag, stream);

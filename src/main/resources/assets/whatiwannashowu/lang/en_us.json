@@ -3,5 +3,6 @@
   "whatiwannashowu.configuration.section.whatiwannashowu.common.toml": "What I wanna show U Configs",
   "whatiwannashowu.configuration.section.whatiwannashowu.common.toml.title": "What I wanna show U Configs",
   "key.whatiwannashowu.share_item": "Share Item to Chat",
-  "key.categories.whatiwannashowu": "whatiwannashowu"
+  "key.categories.whatiwannashowu": "whatiwannashowu",
+  "message.whatiwannashowu.share_cooldown": "Share cooldown: %s second(s) remaining"
 }

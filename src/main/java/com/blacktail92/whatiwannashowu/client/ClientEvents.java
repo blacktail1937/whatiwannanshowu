@@ -12,7 +12,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.*;
@@ -35,6 +34,7 @@ import java.util.Optional;
 public class ClientEvents {
     static final Logger LOGGER = LogUtils.getLogger();
     static KeyMapping SHARED_KEY;
+    static long LAST_SHARE_TIME;
 
     @SubscribeEvent
     static void onKeyRegister(RegisterKeyMappingsEvent event) {
@@ -82,7 +82,19 @@ public class ClientEvents {
     }
 
     static void sendSharePacket(Minecraft mc, ItemStack stack) {
-        if (mc.player != null && mc.getConnection() != null) {
+        if (mc.player == null) return;
+
+        var now = System.currentTimeMillis();
+        int cooldown = Config.SHARE_COOLDOWN.get();
+        if (cooldown > 0 && now - LAST_SHARE_TIME < cooldown) {
+            var remaining = (int) Math.ceil((LAST_SHARE_TIME + cooldown - now) / 1000.0);
+            mc.player.displayClientMessage(
+                    Component.translatable("message.whatiwannashowu.share_cooldown", remaining), true);
+            return;
+        }
+        LAST_SHARE_TIME = now;
+
+        if (mc.getConnection() != null) {
             try {
                 //compress
                 var nbt = (CompoundTag) stack.save(mc.player.registryAccess());
@@ -128,6 +140,8 @@ public class ClientEvents {
 
     @SubscribeEvent
     static void onRegisterClientCommands(RegisterClientCommandsEvent event) {
+        if (Config.IS_JEI_LOADED) return;
+
         var key = "hash";
         event.getDispatcher().register(
                 Commands.literal("wiwsu_lookup")
@@ -136,15 +150,13 @@ public class ClientEvents {
                                         BuiltInRegistries.ITEM.keySet(), builder
                                 )))
                                 .executes(context -> {
-                                    if (Config.IS_JEI_LOADED) {
 //                                        var itemId = ResourceLocationArgument.getId(context, key);
 //                                        var item = BuiltInRegistries.ITEM.get(itemId);
-                                        var hash = StringArgumentType.getString(context, key);
-                                        var mc = Minecraft.getInstance();
-                                        Optional.ofNullable(mc.player)
-                                                .ifPresent(player ->
-                                                        mc.execute(() -> JeiPlugin.showRecipe(ItemCache.get(hash, mc.player.registryAccess()))));
-                                    }
+                                    var hash = StringArgumentType.getString(context, key);
+                                    var mc = Minecraft.getInstance();
+                                    Optional.ofNullable(mc.player)
+                                            .ifPresent(player ->
+                                                    mc.execute(() -> JeiPlugin.showRecipe(ItemCache.get(hash, mc.player.registryAccess()))));
 
                                     return 1;
                                 }))

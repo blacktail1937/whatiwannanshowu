@@ -1,3 +1,4 @@
 {
-  "key.whatiwannashowu.share_item": "分享物品到聊天"
+  "key.whatiwannashowu.share_item": "分享物品到聊天",
+  "message.whatiwannashowu.share_cooldown": "分享冷却中，剩余 %s 秒"
 }
