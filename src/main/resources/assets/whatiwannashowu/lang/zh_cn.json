@@ -1,5 +1,6 @@
 {
-  "key.whatiwannashowu.share_item": "分享物品到聊天",
+  "key.whatiwannashowu.share_item": "分享物品（主手或鼠标指针下）到聊天",
+  "key.whatiwannashowu.share_looked_at": "分享物品（屏幕准星下）到聊天",
   "key.categories.whatiwannashowu": "What I wanna show U",
   "message.whatiwannashowu.share_cooldown": "分享冷却中，剩余 %s 秒"
 }

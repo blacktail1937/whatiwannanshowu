@@ -19,5 +19,8 @@ public class ModClientEvents {
         LOGGER.info("register short key");
         ClientEvents.SHARED_KEY = new KeyMapping("key.whatiwannashowu.share_item", InputConstants.KEY_G, "key.categories.whatiwannashowu");
         event.register(ClientEvents.SHARED_KEY);
+
+        ClientEvents.SHARED_KEY_VIA_AIM_POINT = new KeyMapping("key.whatiwannashowu.share_looked_at", InputConstants.KEY_V, "key.categories.whatiwannashowu");
+        event.register(ClientEvents.SHARED_KEY_VIA_AIM_POINT);
     }
 }

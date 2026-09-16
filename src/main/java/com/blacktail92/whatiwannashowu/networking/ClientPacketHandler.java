@@ -25,9 +25,11 @@ public class ClientPacketHandler {
             var nbt = ItemCache.decompress(payload.nbt());
             var stack = ItemStack.of(nbt);
             var link = ClientEvents.createItemLink(stack);
+            // 注意这里是 ">"，不带空格：图标占位（3 个空格）必须是整行第一段连续空格，
+            // 多一个空格会让图标位置算错、并在图标和名字之间多留一段空隙
             var message = Component.literal("<")
                     .append(Component.literal(senderName))
-                    .append(Component.literal("> "))
+                    .append(Component.literal(">"))
                     .append(link);
 
             mc.gui.getChat().addMessage(message, null, GuiMessageTag.system());

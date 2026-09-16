@@ -3,6 +3,13 @@ plugins {
     id 'idea'
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    // MixinGradle：插件门户上没有这个插件，它能解析是因为 settings.gradle 里加了 Forge 仓库
+    id 'org.spongepowered.mixin' version '0.7.38'
+}
+
+mixin {
+    add sourceSets.main, 'whatiwannashowu.refmap.json'
+    config 'whatiwannashowu.mixins.json'
 }
 
 version = mod_version
@@ -127,6 +134,11 @@ repositories {
         name = "ModMaven"
         url = "https://modmaven.dev"
     }
+    maven {
+        // mixin 的注解处理器只在这里有（Maven Central 上没有 org.spongepowered:mixin）
+        name = "MinecraftForge"
+        url = "https://maven.minecraftforge.net/"
+    }
 }
 
 dependencies {
@@ -136,6 +148,10 @@ dependencies {
     // If the group id is "net.minecraft" and the artifact id is one of ["client", "server", "joined"],
     // then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    // Mixin 注解处理器：生成 refmap。没有它 dev 能跑、正式环境（成员名是 SRG）里
+    // mixin 会找不到注入目标，必须一起打包进 jar
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     // Example mod dependency with JEI - using fg.deobf() ensures the dependency is remapped to your development mappings
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime

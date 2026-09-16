@@ -1,5 +1,6 @@
 {
-  "key.whatiwannashowu.share_item": "Share Item to Chat",
+  "key.whatiwannashowu.share_item": "Share Item in hand or under the cursor",
+  "key.whatiwannashowu.share_looked_at": "Share Item under the crosshair",
   "key.categories.whatiwannashowu": "What I wanna show U",
   "message.whatiwannashowu.share_cooldown": "Share cooldown: %s second(s) remaining"
 }

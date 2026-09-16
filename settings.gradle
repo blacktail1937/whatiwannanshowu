@@ -1,10 +1,17 @@
 pluginManagement {
     repositories {
-        gradlePluginPortal()
+        // 注意顺序：MixinGradle 不在 Gradle 插件门户上（门户上那个 marker 是 404），
+        // 而且这台机器访问 plugins.gradle.org 会 TLS 握手失败，所以能用的仓库放前面，门户只做兜底。
         maven {
             name = 'MinecraftForge'
             url = 'https://maven.minecraftforge.net/'
         }
+        maven {
+            name = 'Sponge'
+            url = 'https://repo.spongepowered.org/repository/maven-public/'
+        }
+        mavenCentral()
+        gradlePluginPortal()
     }
 }
 
