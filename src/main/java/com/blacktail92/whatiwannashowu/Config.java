@@ -28,5 +28,11 @@ public class Config {
             .comment("Minimum cooldown between shares in milliseconds. 0 = no cooldown.")
             .defineInRange("shareCooldown", 500, 0, 60000);
 
+    public static final ModConfigSpec.BooleanValue RENDER_ITEMS_IN_CHAT = BUILDER
+            .comment("Client side only: draw shared items as real item icons inside chat messages.",
+                    "When off, newly shared items show as a plain \"[Item Name]\" link (the link, tooltip and JEI click all still work).",
+                    "Messages that are already in chat keep the icons they were shared with.")
+            .define("renderItemsInChat", true);
+
     static final ModConfigSpec SPEC = BUILDER.build();
 }

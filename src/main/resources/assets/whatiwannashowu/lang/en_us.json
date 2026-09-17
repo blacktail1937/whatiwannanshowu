@@ -2,7 +2,11 @@
   "whatiwannashowu.configuration.title": "What I wanna show U Configs",
   "whatiwannashowu.configuration.section.whatiwannashowu.common.toml": "What I wanna show U Configs",
   "whatiwannashowu.configuration.section.whatiwannashowu.common.toml.title": "What I wanna show U Configs",
-  "key.whatiwannashowu.share_item": "Share Item to Chat",
+  "whatiwannashowu.configuration.maxCompressedSize": "Share data size limit (KB)",
+  "whatiwannashowu.configuration.shareCooldown": "Share cooldown (ms)",
+  "whatiwannashowu.configuration.renderItemsInChat": "Render item icons in chat",
+  "key.whatiwannashowu.share_item": "Share Item in hand or under the cursor",
+  "key.whatiwannashowu.share_looked_at": "Share Item under the crosshair",
   "key.categories.whatiwannashowu": "whatiwannashowu",
   "message.whatiwannashowu.share_cooldown": "Share cooldown: %s second(s) remaining"
 }

@@ -35,7 +35,7 @@ public class ClientPacketHandler {
         var link = ClientEvents.createItemLink(stack);
         var message = Component.literal("<")
                 .append(Component.literal(senderName))
-                .append(Component.literal("> "))
+                .append(Component.literal(">"))
                 .append(link);
         mc.gui.getChat().addMessage(message, null, GuiMessageTag.system());
     }

@@ -38,3 +38,22 @@ run/
 **/src/generated/**/.cache/
 repo/
 !**/src/**/repo/
+
+### 手工解包 MC / NeoForge jar 留在根目录的碎屑（注意开头的 / 表示只匹配仓库根目录，
+### 否则 com/ 会把 src/main/java/com/ 下的源文件也一起忽略掉）###
+/com/
+/META-INF/
+/assets/
+/data/
+/mcp/
+/net/
+/reports/
+/pack.mcmeta
+/neoforge.mixins.json
+/forge.exc
+/forge.sas
+/forge.srg
+/mcplogo.png
+/neoforged_logo.png
+/url.png
+/crash-*.txt
