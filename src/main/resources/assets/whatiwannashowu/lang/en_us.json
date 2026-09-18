@@ -2,5 +2,13 @@
   "key.whatiwannashowu.share_item": "Share Item in hand or under the cursor",
   "key.whatiwannashowu.share_looked_at": "Share Item under the crosshair",
   "key.categories.whatiwannashowu": "What I wanna show U",
-  "message.whatiwannashowu.share_cooldown": "Share cooldown: %s second(s) remaining"
+  "message.whatiwannashowu.share_cooldown": "Share cooldown: %s second(s) remaining",
+
+  "whatiwannashowu.config.title": "What I wanna show U Config",
+  "whatiwannashowu.config.renderItemsInChat": "Render item icons in chat",
+  "whatiwannashowu.config.shareCooldown": "Share cooldown (ms)",
+  "whatiwannashowu.config.shareCooldown.hint": "0 ~ 60000, 0 = no cooldown",
+  "whatiwannashowu.config.maxCompressedSize": "Share data size limit (KB)",
+  "whatiwannashowu.config.maxCompressedSize.hint": "1 ~ 512",
+  "whatiwannashowu.config.reset": "Reset to defaults"
 }

@@ -126,14 +126,20 @@ public class ClientEvents {
                 new HoverEvent.ItemStackInfo(stack)
         );
 
-        // 3 个空格是图标的占位：物品本体就藏在这段空格的 hover 样式里，
-        // 渲染时由 ChatItemIcons 从文字样式里读回来（和 Quark 一样的做法）。
-        // 注意占位必须是"整行里第一段连续空格"，所以调用方的发送者前缀不要再带空格。
-        var placeholder = Component.literal(ChatItemIcons.PLACEHOLDER)
-                .withStyle(style -> style.withHoverEvent(itemHover));
+        // 图标占位：物品本体藏在这段空格的 hover 样式里，渲染时由 ChatItemIcons 从文字样式里读回来
+        //（和 Quark 一样的做法）。占位自带左侧间隙，所以调用方的发送者前缀不要再带空格，
+        // 否则整段连续空格会变长、图标和物品名之间的间隙跟着变大。
+        // 关掉 renderItemsInChat 时就完全不加占位，消息退化成普通的 "[物品名]" 链接，
+        // 但玩家名和物品名之间仍然要留一个空格。
+        var link = Component.empty();
+        if (Config.RENDER_ITEMS_IN_CHAT.get()) {
+            link.append(Component.literal(ChatItemIcons.PLACEHOLDER)
+                    .withStyle(style -> style.withHoverEvent(itemHover)));
+        } else {
+            link.append(Component.literal(" "));
+        }
 
-        return Component.empty()
-                .append(placeholder)
+        return link
                 .append(Component.literal("[")
                         .append(itemName)
                         .append("]")

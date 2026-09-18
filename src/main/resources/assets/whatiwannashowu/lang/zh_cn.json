@@ -2,5 +2,13 @@
   "key.whatiwannashowu.share_item": "分享物品（主手或鼠标指针下）到聊天",
   "key.whatiwannashowu.share_looked_at": "分享物品（屏幕准星下）到聊天",
   "key.categories.whatiwannashowu": "What I wanna show U",
-  "message.whatiwannashowu.share_cooldown": "分享冷却中，剩余 %s 秒"
+  "message.whatiwannashowu.share_cooldown": "分享冷却中，剩余 %s 秒",
+
+  "whatiwannashowu.config.title": "What I wanna show U 配置",
+  "whatiwannashowu.config.renderItemsInChat": "在聊天栏里渲染物品图标",
+  "whatiwannashowu.config.shareCooldown": "分享冷却（毫秒）",
+  "whatiwannashowu.config.shareCooldown.hint": "0 ~ 60000，0 = 不限制",
+  "whatiwannashowu.config.maxCompressedSize": "分享数据体积上限（KB）",
+  "whatiwannashowu.config.maxCompressedSize.hint": "1 ~ 512",
+  "whatiwannashowu.config.reset": "恢复默认"
 }
