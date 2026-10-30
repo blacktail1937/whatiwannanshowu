@@ -36,6 +36,10 @@ public class JeiPlugin implements IModPlugin {
         return ItemStack.EMPTY;
     }
 
+    public static boolean hasKeyboardFocus() {
+        return JEI_RUNTIME != null && JEI_RUNTIME.getIngredientListOverlay().hasKeyboardFocus();
+    }
+
     @Override
     public @NotNull ResourceLocation getPluginUid() {
         return ResourceLocation.fromNamespaceAndPath("whatiwannashowu", "jei_plugin");

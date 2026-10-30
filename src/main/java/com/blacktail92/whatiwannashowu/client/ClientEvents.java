@@ -9,6 +9,9 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.MultiLineEditBox;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -60,6 +63,10 @@ public class ClientEvents {
         var mc = Minecraft.getInstance();
         if (mc.screen == null) return;
 
+        // Text fields consume this key for editing. Do not turn it into an item share as well.
+        if (hasFocusedTextInput(event.getScreen())
+                || (Config.IS_JEI_LOADED && JeiPlugin.hasKeyboardFocus())) return;
+
         if (SHARED_KEY.isActiveAndMatches(InputConstants.getKey(event.getKeyCode(), event.getScanCode()))) {
             var stack = Optional.of(mc.screen)
                     .filter(AbstractContainerScreen.class::isInstance)
@@ -75,6 +82,15 @@ public class ClientEvents {
                 event.setCanceled(true);
             }
         }
+    }
+
+    private static boolean hasFocusedTextInput(Screen screen) {
+        var focused = screen.getFocused();
+        if (focused instanceof EditBox || focused instanceof MultiLineEditBox) return true;
+
+        return screen.children().stream().anyMatch(child ->
+                child instanceof EditBox editBox && editBox.isFocused()
+                        || child instanceof MultiLineEditBox multiLineEditBox && multiLineEditBox.isFocused());
     }
 
     @SubscribeEvent
@@ -114,7 +130,7 @@ public class ClientEvents {
         if (mc.getConnection() != null) {
             try {
                 //compress
-                var nbt = (CompoundTag) stack.save(mc.player.registryAccess());
+                var nbt = (CompoundTag) ItemCache.normalizeForSerialization(stack).save(mc.player.registryAccess());
                 mc.getConnection().send(
                         new ShareItemPayload(mc.player.getUUID(), ItemCache.compress(nbt))
                 );
@@ -125,11 +141,12 @@ public class ClientEvents {
     }
 
     public static Component createItemLink(ItemStack stack) {
-        var itemName = stack.getHoverName();
+        var shareStack = ItemCache.normalizeForSerialization(stack);
+        var itemName = shareStack.getHoverName();
 
         var itemHover = new HoverEvent(
                 HoverEvent.Action.SHOW_ITEM,
-                new HoverEvent.ItemStackInfo(stack)
+                new HoverEvent.ItemStackInfo(shareStack)
         );
 
         // 图标占位：物品本体藏在这段空格的 hover 样式里，渲染时由 ChatItemIcons 从文字的样式里读回来
@@ -149,12 +166,12 @@ public class ClientEvents {
                         .append(itemName)
                         .append("]")
                         .withStyle(style -> {
-                            var updateStyle = stack.getRarity().getStyleModifier().apply(style);
+                            var updateStyle = shareStack.getRarity().getStyleModifier().apply(style);
 
                             if (Config.IS_JEI_LOADED) {
                                 var mc = Minecraft.getInstance();
                                 if (mc.player != null) {
-                                    var hash = ItemCache.put(stack, mc.player.registryAccess());
+                                    var hash = ItemCache.put(shareStack, mc.player.registryAccess());
                                     var cmd = "/wiwsu_lookup " + hash;
                                     updateStyle = updateStyle.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, cmd));
                                 }
