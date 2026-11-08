@@ -25,7 +25,7 @@ public class ClientPacketHandler {
         try {
             var nbt = ItemCache.decompress(payload.nbt());
             stack = ItemStack.parse(mc.player.registryAccess(), nbt).orElse(ItemStack.EMPTY);
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error("Failed to parse item stack!", e);
             return;
         }

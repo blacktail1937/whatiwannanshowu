@@ -5,6 +5,7 @@ import mezz.jei.api.IModPlugin;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.runtime.IJeiRuntime;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -38,6 +39,34 @@ public class JeiPlugin implements IModPlugin {
 
     public static boolean hasKeyboardFocus() {
         return JEI_RUNTIME != null && JEI_RUNTIME.getIngredientListOverlay().hasKeyboardFocus();
+    }
+
+    /**
+     * JEI："这个界面上鼠标下是什么物品？"
+     *
+     * <p>{@code IScreenHelper#getClickableIngredientUnderMouse} 会把各 mod 注册的
+     * {@code IGuiContainerHandler} / {@code IGlobalGuiHandler} 都过一遍 —— 只要那个界面
+     * （例如精炼存储的网格）自己告诉过 JEI"我这里鼠标下是什么"，我们就能拿到，
+     * 不需要为它单独适配。
+     *
+     * @return 鼠标下的物品；拿不到返回空栈
+     */
+    public static ItemStack getScreenIngredientUnderMouse(Screen screen, double mouseX, double mouseY) {
+        if (JEI_RUNTIME == null || screen == null) return ItemStack.EMPTY;
+
+        try {
+            var iterator = JEI_RUNTIME.getScreenHelper()
+                    .getClickableIngredientUnderMouse(screen, mouseX, mouseY)
+                    .iterator();
+            while (iterator.hasNext()) {
+                var stack = iterator.next().getTypedIngredient().getItemStack().orElse(ItemStack.EMPTY);
+                if (!stack.isEmpty()) return stack;
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Failed to query the ingredient under mouse from JEI", e);
+        }
+
+        return ItemStack.EMPTY;
     }
 
     @Override

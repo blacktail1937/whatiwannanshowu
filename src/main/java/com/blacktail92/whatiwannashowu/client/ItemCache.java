@@ -20,7 +20,7 @@ import java.util.Optional;
 
 public class ItemCache {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final int MAX_SERIALIZED_STACK_COUNT = 99;
+    private static final int MAX_SERIALIZED_STACK_COUNT = 1;
 
     private static final int MAX = 500;
     /// hash-compressed nbt
@@ -46,7 +46,7 @@ public class ItemCache {
             CACHE.put(hash, bytes);
 
             return hash;
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error("Error while compressing ItemStack.", e);
         }
 
@@ -71,7 +71,7 @@ public class ItemCache {
 
                 return ItemStack.parseOptional(provider, nbt);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error("Error while decompressing ItemStack.", e);
         }
 
