@@ -20,6 +20,7 @@ import java.util.Optional;
 
 public class ItemCache {
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static final int MAX_SERIALIZED_STACK_COUNT = 99;
 
     private static final int MAX = 500;
     /// hash-compressed nbt
@@ -35,7 +36,7 @@ public class ItemCache {
         if (stack.isEmpty()) return "";
 
         try {
-            var nbt = (CompoundTag) stack.save(provider);
+            var nbt = (CompoundTag) normalizeForSerialization(stack).save(provider);
 //            LOGGER.info("before:{}, {}", nbt.size(), nbt.sizeInBytes());
             var bytes = compress(nbt);
 //            LOGGER.info("after:{}", bytes.length);
@@ -50,6 +51,16 @@ public class ItemCache {
         }
 
         return "";
+    }
+
+    /**
+     * Minecraft's ItemStack codec only accepts counts from 1 through 99.
+     * Some mods allow larger stacks, so cap the copy before crossing an NBT
+     * serialization boundary instead of letting the codec throw.
+     */
+    public static ItemStack normalizeForSerialization(ItemStack stack) {
+        if (stack.isEmpty() || stack.getCount() <= MAX_SERIALIZED_STACK_COUNT) return stack;
+        return stack.copyWithCount(MAX_SERIALIZED_STACK_COUNT);
     }
 
     public static ItemStack get(String hash, HolderLookup.Provider provider) {
