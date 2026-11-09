@@ -9,6 +9,9 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.MultiLineEditBox;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -17,7 +20,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
@@ -32,9 +34,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.slf4j.Logger;
 
-import java.io.IOException;
-import java.util.Optional;
-
 @Mod.EventBusSubscriber(modid = WhatIWannaShowU.MODID, value = Dist.CLIENT)
 public class ClientEvents {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -44,26 +43,71 @@ public class ClientEvents {
     public static KeyMapping SHARED_KEY_VIA_AIM_POINT;
     private static long LAST_SHARE_TIME;
 
+    private static boolean hasFocusedTextInput(Screen screen) {
+        if (isFocusedTextInput(screen.getFocused())) return true;
+        return screen.children().stream().anyMatch(ClientEvents::isFocusedTextInput);
+    }
+
+    private static boolean isFocusedTextInput(Object widget) {
+        if (widget instanceof EditBox box) return box.isFocused() && box.visible && box.active;
+        if (widget instanceof MultiLineEditBox box) return box.isFocused() && box.visible && box.active;
+        return false;
+    }
+
     @SubscribeEvent
     static void onScreenKey(ScreenEvent.KeyReleased.Pre event) {
         var mc = Minecraft.getInstance();
-        if (mc.screen == null) return;
+        var screen = event.getScreen();
+        if (screen == null) return;
 
-        if (SHARED_KEY.isActiveAndMatches(InputConstants.getKey(event.getKeyCode(), event.getScanCode()))) {
-            var stack = Optional.of(mc.screen)
-                    .filter(AbstractContainerScreen.class::isInstance)
-                    .map(AbstractContainerScreen.class::cast)
-                    .map(AbstractContainerScreen::getSlotUnderMouse)
-                    .map(Slot::getItem)
-                    .or(() -> Optional.ofNullable(Config.IS_JEI_LOADED ? JeiPlugin.getStackUnderMouse() : null))
-                    .filter(s -> !s.isEmpty())
-                    .orElse(ItemStack.EMPTY);
+        var pressed = InputConstants.getKey(event.getKeyCode(), event.getScanCode());
+        if (!SHARED_KEY.isActiveAndMatches(pressed)) return;
 
-            if (!stack.isEmpty()) {
-                sendSharePacket(mc, stack);
-                event.setCanceled(true);
+        if (hasFocusedTextInput(screen) || (Config.IS_JEI_LOADED && JeiPlugin.hasKeyboardFocus())) {
+            if (!Screen.hasControlDown() && !Screen.hasAltDown()) {
+                return;
             }
         }
+
+        var stack = resolveItemUnderMouse(mc, screen);
+
+        if (!stack.isEmpty()) {
+            sendSharePacket(mc, stack);
+            event.setCanceled(true);
+        }
+    }
+
+    /**
+     * 取"界面上鼠标下的物品"，三层兜底：
+     * <ol>
+     *   <li>原版槽位：{@code getSlotUnderMouse()}（原版容器、AE 那种保持槽位坐标的界面）</li>
+     *   <li>渲染记录：解决自绘界面（RS 网格、Chipped、Sawmill 中间的列表）</li>
+     *   <li>JEI：先问界面处理器，再退回 JEI 自己的物品列表/配方页</li>
+     * </ol>
+     */
+    private static ItemStack resolveItemUnderMouse(Minecraft mc, Screen screen) {
+        // ① 原版槽位
+        if (screen instanceof AbstractContainerScreen<?> container) {
+            var slot = container.getSlotUnderMouse();
+            if (slot != null && !slot.getItem().isEmpty()) return slot.getItem();
+        }
+
+        var mouse = GuiItemPicker.mouseInGuiSpace(mc);
+
+        // ② 这一帧界面上画出来的物品
+        var picked = GuiItemPicker.pickUnderMouse(mouse[0], mouse[1]);
+        if (!picked.isEmpty()) return picked;
+
+        // ③ JEI：界面处理器 → 自带的物品列表/配方页
+        if (Config.IS_JEI_LOADED) {
+            var fromScreen = JeiPlugin.getScreenIngredientUnderMouse(screen, mouse[0], mouse[1]);
+            if (!fromScreen.isEmpty()) return fromScreen;
+
+            var fromJeiUi = JeiPlugin.getStackUnderMouse();
+            if (!fromJeiUi.isEmpty()) return fromJeiUi;
+        }
+
+        return ItemStack.EMPTY;
     }
 
     @SubscribeEvent
@@ -110,10 +154,14 @@ public class ClientEvents {
 
         if (mc.getConnection() != null) {
             try {
-                var nbt = stack.serializeNBT();
+                var nbt = ItemCache.normalizeForSerialization(stack).serializeNBT();
                 ModMessages.sendToServer(new ShareItemPayload(mc.player.getUUID(), ItemCache.compress(nbt)));
-            } catch (IOException e) {
+            } catch (Exception e) {
                 LOGGER.error("Failed to send share packet", e);
+                if (mc.player != null) {
+                    mc.player.displayClientMessage(
+                            Component.translatable("message.whatiwannashowu.share_failed"), true);
+                }
             }
         }
     }
@@ -221,7 +269,9 @@ public class ClientEvents {
         return ItemStack.EMPTY;
     }
 
-    /** 排除自己、自己骑的东西、旁观者、已移除和隐形的实体（口径和 Jade 基本一致）。 */
+    /**
+     * 排除自己、自己骑的东西、旁观者、已移除和隐形的实体（口径和 Jade 基本一致）。
+     */
     private static boolean canTarget(Player player, Entity entity) {
         return entity != player
                 && !entity.isRemoved()
@@ -257,7 +307,9 @@ public class ClientEvents {
         return best;
     }
 
-    /** 实体对应的"物品形态"；拿不到就返回空栈（调用方会继续看下一个实体）。 */
+    /**
+     * 实体对应的"物品形态"；拿不到就返回空栈（调用方会继续看下一个实体）。
+     */
     private static ItemStack itemOf(Entity entity) {
         if (entity instanceof ItemEntity itemEntity) {
             return itemEntity.getItem().copy();   // 地上的掉落物：就是它本身

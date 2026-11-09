@@ -3,6 +3,7 @@
   "key.whatiwannashowu.share_looked_at": "Share Item under the crosshair",
   "key.categories.whatiwannashowu": "What I wanna show U",
   "message.whatiwannashowu.share_cooldown": "Share cooldown: %s second(s) remaining",
+  "message.whatiwannashowu.share_failed": "Couldn't share this item (invalid or too large data)",
 
   "whatiwannashowu.config.title": "What I wanna show U Config",
   "whatiwannashowu.config.renderItemsInChat": "Render item icons in chat",

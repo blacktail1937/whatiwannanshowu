@@ -29,21 +29,25 @@ public class ItemCache {
                 }
             });
 
+    public static ItemStack normalizeForSerialization(ItemStack stack) {
+        if (stack.isEmpty()) return stack;
+        return stack.getCount() == 1 ? stack : stack.copyWithCount(1);
+    }
+
     public static String put(ItemStack stack) {
         if (stack.isEmpty()) return "";
 
         try {
-            var nbt = stack.serializeNBT();
+            var nbt = normalizeForSerialization(stack).serializeNBT();
 //            LOGGER.info("before:{}, {}", nbt.size(), nbt.sizeInBytes());
             var bytes = compress(nbt);
 //            LOGGER.info("after:{}", bytes.length);
-
-            var hash = DigestUtils.sha1Hex(bytes).substring(0, 8);
+            var hash = DigestUtils.sha1Hex(bytes);
 
             CACHE.put(hash, bytes);
 
             return hash;
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error("Error while compressing ItemStack.", e);
         }
 
@@ -58,7 +62,7 @@ public class ItemCache {
 
                 return ItemStack.of(nbt);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error("Error while decompressing ItemStack.", e);
         }
 

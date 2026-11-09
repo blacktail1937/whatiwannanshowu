@@ -9,8 +9,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 
-import java.io.IOException;
-
 public class ClientPacketHandler {
     private static final Logger LOGGER = LogUtils.getLogger();
 
@@ -20,7 +18,7 @@ public class ClientPacketHandler {
 
         var player = mc.getConnection().getPlayerInfo(payload.senderUUID());
         var senderName = (player != null) ? player.getProfile().getName() : "Player";
-
+        
         try {
             var nbt = ItemCache.decompress(payload.nbt());
             var stack = ItemStack.of(nbt);
@@ -33,8 +31,8 @@ public class ClientPacketHandler {
                     .append(link);
 
             mc.gui.getChat().addMessage(message, null, GuiMessageTag.system());
-        } catch (IOException e) {
-            LOGGER.error("Error while trying to handle share item link to client", e);
+        } catch (Exception e) {
+            LOGGER.error("Failed to display shared item", e);
         }
     }
 }

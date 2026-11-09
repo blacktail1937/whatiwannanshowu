@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "whatiwannashowu.refmap.json",
   "client": [
+    "GuiGraphicsItemMixin",
     "GuiGraphicsMixin"
   ],
   "injectors": {
